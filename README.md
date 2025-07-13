@@ -84,7 +84,7 @@ A modern, beautiful web application for tracking daily collections with enhanced
 ## 📁 Project Structure
 
 ```
-Daily Collection App/
+Collection-Tracker/
 ├── app.py              # Main Flask application
 ├── collection.db       # SQLite database
 ├── schema.sql          # Database schema
@@ -96,44 +96,6 @@ Daily Collection App/
     └── history.html    # Collection history page
 ```
 
-## 🎨 Design System
-
-### Color Palette
-- **Primary**: `#667eea` (Blue gradient)
-- **Secondary**: `#764ba2` (Purple gradient)
-- **Success**: `#48bb78` (Green)
-- **Warning**: `#ed8936` (Orange)
-- **Danger**: `#f56565` (Red)
-
-### Typography
-- **Font**: Inter (Google Fonts)
-- **Weights**: 300, 400, 500, 600, 700
-- **Responsive**: Scales appropriately on all devices
-
-### Components
-- **Cards**: Elevated with shadows and hover effects
-- **Buttons**: Gradient backgrounds with hover animations
-- **Tables**: Clean, modern design with proper spacing
-- **Forms**: Focus states and validation feedback
-
-## 🔧 Customization
-
-### Styling
-The app uses CSS custom properties for easy theming:
-```css
-:root {
-    --primary-color: #667eea;
-    --secondary-color: #764ba2;
-    --success-color: #48bb78;
-    /* ... more variables */
-}
-```
-
-### Database
-The SQLite database can be easily migrated to other databases:
-- PostgreSQL
-- MySQL
-- MongoDB (with schema changes)
 
 ## 📈 Performance
 
@@ -158,18 +120,5 @@ The SQLite database can be easily migrated to other databases:
 - [ ] Mobile app version
 - [ ] Cloud synchronization
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## 📄 License
-
-This project is open source and available under the MIT License.
-
 ---
 
-**Built with ❤️ using Flask, HTML5, CSS3, and JavaScript** 
