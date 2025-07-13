@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Collection Tracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="app-header">
+            <h1><i class="fas fa-chart-line"></i> Daily Collection Tracker</h1>
+            <p>Track your daily collections with ease and precision</p>
+            <div style="margin-top: 1rem;">
+                <a href="{{ url_for('history') }}" class="btn btn-primary" style="background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.3);">
+                    <i class="fas fa-history"></i>
+                    View History
+                </a>
+            </div>
+        </div>
+
+        {% if message %}
+        <div class="alert alert-{{ message_type }}">
+            {% if message_type == 'success' %}
+                <i class="fas fa-check-circle"></i>
+            {% elif message_type == 'warning' %}
+                <i class="fas fa-exclamation-triangle"></i>
+            {% else %}
+                <i class="fas fa-info-circle"></i>
+            {% endif %}
+            {{ message }}
+        </div>
+        {% endif %}
+
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-calendar-alt"></i>
+                Select Date
+            </div>
+            <form method="get" class="date-picker">
+                <label for="date">Choose Date:</label>
+                <input type="date" id="date" name="date" value="{{ today }}" onchange="this.form.submit()">
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-user-plus"></i>
+                Add New Person
+            </div>
+            <form method="post" class="add-person-form">
+                <div class="form-group">
+                    <label for="person_name" class="form-label">Person Name</label>
+                    <input type="text" id="person_name" name="person_name" class="form-control" 
+                           placeholder="Enter person's name" required>
+                </div>
+                <button type="submit" name="add_person" class="btn btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Add Person
+                </button>
+            </form>
+        </div>
+
+        {% if people %}
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-list-check"></i>
+                Collection Records
+            </div>
+            
+            <form method="post" id="collections-form">
+                <input type="hidden" name="save_collections" value="1">
+                
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px; text-align: center;">
+                                    <i class="fas fa-check"></i> Collected
+                                </th>
+                                <th>
+                                    <i class="fas fa-user"></i> Name
+                                </th>
+                                <th style="width: 150px;">
+                                    <i class="fas fa-rupee-sign"></i> Amount (₹)
+                                </th>
+                                <th style="width: 100px; text-align: center;">
+                                    <i class="fas fa-trash"></i> Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for person in people %}
+                            {% set row = collections.get(person['id']) %}
+                            <tr data-person-id="{{ person['id'] }}">
+                                <td class="text-center">
+                                    <div class="checkbox-wrapper">
+                                        <input type="checkbox" 
+                                               name="collected_{{ person['id'] }}" 
+                                               id="collected_{{ person['id'] }}" 
+                                               class="checkbox-custom"
+                                               {% if row and row['collected'] %}checked{% endif %} 
+                                               onchange="toggleAmount({{ person['id'] }})">
+                                    </div>
+                                </td>
+                                <td>
+                                    <strong>{{ person['name'] }}</strong>
+                                </td>
+                                <td>
+                                    <input type="number" 
+                                           step="0.01" 
+                                           min="0" 
+                                           name="amount_{{ person['id'] }}" 
+                                           id="amount_{{ person['id'] }}" 
+                                           class="form-control amount-input" 
+                                           value="{{ row['amount'] if row and row['collected'] else '' }}" 
+                                           placeholder="0.00"
+                                           {% if not row or not row['collected'] %}disabled{% endif %} 
+                                           onchange="updateTotal()">
+                                </td>
+                                <td class="text-center">
+                                    <a href="{{ url_for('delete_person', person_id=person['id']) }}" 
+                                       class="btn btn-danger btn-sm" 
+                                       onclick="return confirm('Are you sure you want to remove {{ person['name'] }}?')"
+                                       title="Remove Person">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="total-display">
+                    <h3><i class="fas fa-calculator"></i> Total Collected</h3>
+                    <div class="total-amount">₹ <span id="total_collected">0.00</span></div>
+                </div>
+
+                <div style="text-align: center;">
+                    <button type="submit" class="btn btn-success" id="save-btn">
+                        <i class="fas fa-save"></i>
+                        Save Collections
+                    </button>
+                </div>
+            </form>
+        </div>
+        {% else %}
+        <div class="card">
+            <div style="text-align: center; padding: 3rem 1rem;">
+                <i class="fas fa-users" style="font-size: 4rem; color: #cbd5e0; margin-bottom: 1rem;"></i>
+                <h3 style="color: #64748b; margin-bottom: 1rem;">No People Added Yet</h3>
+                <p style="color: #94a3b8; margin-bottom: 2rem;">Start by adding people to track their collections.</p>
+                <button type="button" class="btn btn-primary" onclick="document.getElementById('person_name').focus()">
+                    <i class="fas fa-plus"></i>
+                    Add Your First Person
+                </button>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if people %}
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-chart-bar"></i>
+                Quick Statistics
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <div style="text-align: center; padding: 1rem; background: #f8fafc; border-radius: 8px;">
+                    <div style="font-size: 2rem; font-weight: 700; color: var(--primary-color);">{{ people|length }}</div>
+                    <div style="color: #64748b; font-weight: 500;">Total People</div>
+                </div>
+                <div style="text-align: center; padding: 1rem; background: #f8fafc; border-radius: 8px;">
+                    <div style="font-size: 2rem; font-weight: 700; color: var(--success-color);" id="collected-count">0</div>
+                    <div style="color: #64748b; font-weight: 500;">Collected Today</div>
+                </div>
+                <div style="text-align: center; padding: 1rem; background: #f8fafc; border-radius: 8px;">
+                    <div style="font-size: 2rem; font-weight: 700; color: var(--warning-color);" id="pending-count">0</div>
+                    <div style="color: #64748b; font-weight: 500;">Pending</div>
+                </div>
+            </div>
+        </div>
+
+        {% if stats %}
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-chart-line"></i>
+                Collection Analytics
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                <div style="text-align: center; padding: 1.5rem; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 8px;">
+                    <div style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem;">₹{{ "%.2f"|format(stats.daily.amount) }}</div>
+                    <div style="font-weight: 500; opacity: 0.9;">Today's Collection</div>
+                </div>
+                <div style="text-align: center; padding: 1.5rem; background: linear-gradient(135deg, #48bb78, #38a169); color: white; border-radius: 8px;">
+                    <div style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem;">₹{{ "%.2f"|format(stats.weekly.amount) }}</div>
+                    <div style="font-weight: 500; opacity: 0.9;">This Week</div>
+                </div>
+                <div style="text-align: center; padding: 1.5rem; background: linear-gradient(135deg, #ed8936, #dd6b20); color: white; border-radius: 8px;">
+                    <div style="font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem;">₹{{ "%.2f"|format(stats.monthly.amount) }}</div>
+                    <div style="font-weight: 500; opacity: 0.9;">This Month</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% endif %}
+    </div>
+
+    <script>
+        function toggleAmount(id) {
+            const cb = document.getElementById('collected_' + id);
+            const amt = document.getElementById('amount_' + id);
+            const row = cb.closest('tr');
+            
+            amt.disabled = !cb.checked;
+            
+            if (!cb.checked) {
+                amt.value = '';
+                row.style.opacity = '0.6';
+            } else {
+                row.style.opacity = '1';
+                amt.focus();
+            }
+            
+            updateTotal();
+            updateStats();
+        }
+
+        function updateTotal() {
+            let total = 0;
+            let collectedCount = 0;
+            let pendingCount = 0;
+            
+            document.querySelectorAll('.amount-input').forEach(function(input) {
+                const personId = input.id.split('_')[1];
+                const checkbox = document.getElementById('collected_' + personId);
+                
+                if (checkbox.checked) {
+                    collectedCount++;
+                    if (input.value && !input.disabled) {
+                        total += parseFloat(input.value) || 0;
+                    }
+                } else {
+                    pendingCount++;
+                }
+            });
+            
+            document.getElementById('total_collected').innerText = total.toFixed(2);
+            
+            const totalPeople = document.querySelectorAll('.amount-input').length;
+            document.getElementById('collected-count').innerText = collectedCount;
+            document.getElementById('pending-count').innerText = pendingCount;
+        }
+
+        function updateStats() {
+            updateTotal();
+        }
+
+        const collectionsForm = document.getElementById('collections-form');
+        if (collectionsForm) {
+            collectionsForm.addEventListener('submit', function(e) {
+                const saveBtn = document.getElementById('save-btn');
+                saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                saveBtn.disabled = true;
+                document.body.classList.add('loading');
+            });
+        }
+
+        const personNameInput = document.getElementById('person_name');
+        if (personNameInput) {
+            personNameInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this.closest('form').submit();
+                }
+            });
+        }
+
+        let autoSaveTimeout;
+        function setupAutoSave() {
+            document.querySelectorAll('.amount-input, input[type="checkbox"]').forEach(function(element) {
+                element.addEventListener('change', function() {
+                    clearTimeout(autoSaveTimeout);
+                    autoSaveTimeout = setTimeout(() => {
+                        const saveBtn = document.getElementById('save-btn');
+                        const originalText = saveBtn.innerHTML;
+                        saveBtn.innerHTML = '<i class="fas fa-check"></i> Auto-saved';
+                        saveBtn.classList.add('success-animation');
+                        
+                        setTimeout(() => {
+                            saveBtn.innerHTML = originalText;
+                            saveBtn.classList.remove('success-animation');
+                        }, 2000);
+                    }, 2000);
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTotal();
+            setupAutoSave();
+            
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                const form = document.getElementById('collections-form');
+                if (form) form.submit();
+            }
+            
+            if (e.key === 'Escape') {
+                const personNameInput = document.getElementById('person_name');
+                if (personNameInput) personNameInput.value = '';
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collection History - Daily Collection Tracker</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="app-header">
+            <h1><i class="fas fa-history"></i> Collection History</h1>
+            <p>View your collection records from the past 30 days</p>
+        </div>
+
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <a href="{{ url_for('index') }}" class="btn btn-primary">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Dashboard
+                </a>
+                <div style="text-align: right;">
+                    <h3 style="margin: 0; color: var(--dark-text);">
+                        <i class="fas fa-calendar"></i>
+                        Last 30 Days
+                    </h3>
+                </div>
+            </div>
+        </div>
+
+        {% if history %}
+            {% for date_str, collections in history.items() %}
+            <div class="card">
+                <div class="card-title">
+                    <i class="fas fa-calendar-day"></i>
+                    {{ date_str }}
+                </div>
+                
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-user"></i> Person</th>
+                                <th style="text-align: center;"><i class="fas fa-check"></i> Status</th>
+                                <th style="text-align: right;"><i class="fas fa-rupee-sign"></i> Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for collection in collections %}
+                            <tr>
+                                <td>
+                                    <strong>{{ collection.name }}</strong>
+                                </td>
+                                <td style="text-align: center;">
+                                    {% if collection.collected %}
+                                        <span style="color: var(--success-color); font-weight: 600;">
+                                            <i class="fas fa-check-circle"></i> Collected
+                                        </span>
+                                    {% else %}
+                                        <span style="color: var(--warning-color); font-weight: 600;">
+                                            <i class="fas fa-times-circle"></i> Pending
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td style="text-align: right; font-weight: 600;">
+                                    {% if collection.collected and collection.amount %}
+                                        ₹{{ "%.2f"|format(collection.amount) }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                {% set daily_total = collections|selectattr('collected', 'equalto', 1)|sum(attribute='amount') %}
+                {% set collected_count = collections|selectattr('collected', 'equalto', 1)|list|length %}
+                {% set total_count = collections|list|length %}
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1.5rem;">
+                    <div style="text-align: center; padding: 1rem; background: #f8fafc; border-radius: 8px;">
+                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary-color);">{{ total_count }}</div>
+                        <div style="color: #64748b; font-weight: 500;">Total People</div>
+                    </div>
+                    <div style="text-align: center; padding: 1rem; background: #f8fafc; border-radius: 8px;">
+                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--success-color);">{{ collected_count }}</div>
+                        <div style="color: #64748b; font-weight: 500;">Collected</div>
+                    </div>
+                    <div style="text-align: center; padding: 1rem; background: #f8fafc; border-radius: 8px;">
+                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--warning-color);">{{ total_count - collected_count }}</div>
+                        <div style="color: #64748b; font-weight: 500;">Pending</div>
+                    </div>
+                    <div style="text-align: center; padding: 1rem; background: linear-gradient(135deg, var(--success-color), #38a169); color: white; border-radius: 8px;">
+                        <div style="font-size: 1.5rem; font-weight: 700;">₹{{ "%.2f"|format(daily_total) }}</div>
+                        <div style="font-weight: 500; opacity: 0.9;">Total Amount</div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="card">
+                <div style="text-align: center; padding: 3rem 1rem;">
+                    <i class="fas fa-history" style="font-size: 4rem; color: #cbd5e0; margin-bottom: 1rem;"></i>
+                    <h3 style="color: #64748b; margin-bottom: 1rem;">No History Available</h3>
+                    <p style="color: #94a3b8; margin-bottom: 2rem;">No collection records found for the past 30 days.</p>
+                    <a href="{{ url_for('index') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i>
+                        Start Adding Collections
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.card').forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-2px)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    window.location.href = "{{ url_for('index') }}";
+                }
+            });
+        });
+    </script>
+</body>
+</html> 
